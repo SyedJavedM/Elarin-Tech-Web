@@ -1,6 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect x="2" y="2" width="44" height="44" rx="14" fill="#234832"/>
-  <path d="M8 29c5.7 0 10.8 1.5 16 4.5 5.2-3 10.3-4.5 16-4.5v8c-6.2 0-11.5 1.5-16 4.5-4.5-3-9.8-4.5-16-4.5v-8Z" fill="none" stroke="#b5ed65" stroke-width="2.4" stroke-linejoin="round"/>
-  <path d="m17 11-7 6 7 6m14-12 7 6-7 6M24 28V13m-4 4 4-4 4 4" fill="none" stroke="#b5ed65" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="24" cy="10" r="2" fill="#b5ed65"/>
+  <defs>
+    <linearGradient id="swoosh" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#008b39"/>
+      <stop offset=".58" stop-color="#b5ed65"/>
+      <stop offset="1" stop-color="#00a83d"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#00512c"/>
+      <stop offset="1" stop-color="#002d1b"/>
+    </linearGradient>
+  </defs>
+  <path d="M12.6 34.7a15 15 0 1 1 21.1-21.3" fill="none" stroke="url(#ring)" stroke-width="4.2" stroke-linecap="butt"/>
+  <path d="M14.6 32.7a11.1 11.1 0 0 0 16.7-3.4" fill="none" stroke="#00a941" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M5.5 36c5.6-9.7 17.1-15.3 34.2-24.2" fill="none" stroke="url(#swoosh)" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="40.5" cy="9" r="3.4" fill="#00a941"/>
 </svg>
