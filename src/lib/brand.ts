@@ -1,5 +1,5 @@
 export const brand = {
-  name: process.env.COMPANY_NAME?.trim() || "E-L-A-R-I-N T-E-C-H",
+  name: process.env.COMPANY_NAME?.trim() || "ELARIN TECH",
   tagline: process.env.COMPANY_TAGLINE?.trim() || "Evolve, Learn, Innovate.",
   description: process.env.COMPANY_DESCRIPTION?.trim() || "Technology education, practical learning programs, and digital solutions for organizations.",
   email: process.env.CONTACT_EMAIL?.trim() || "",
