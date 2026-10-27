@@ -1,4 +1,45 @@
 "use client";
-import {useState,type FormEvent} from "react";
-import {useRouter} from "next/navigation";
-export function AuthForm({mode}:{mode:"login"|"register"}){const router=useRouter();const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setMessage("");const data=Object.fromEntries(new FormData(event.currentTarget).entries());try{const response=await fetch(`/api/auth/${mode}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not sign in");router.push("/dashboard");router.refresh()}catch(error){setMessage(error instanceof Error?error.message:"Please try again.")}finally{setBusy(false)}}return <form className="form-stack auth-form" onSubmit={submit}>{mode==="register"?<label>Full name<input name="name" required minLength={2} autoComplete="name"/></label>:null}<label>Email<input name="email" type="email" required autoComplete="email"/></label><label>Password<input name="password" type="password" required minLength={12} maxLength={128} autoComplete={mode==="login"?"current-password":"new-password"}/></label><button className="button" disabled={busy}>{busy?"Working…":mode==="login"?"Sign in":"Create account"}</button><p className="form-status" aria-live="polite">{message}</p></form>}
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+
+export function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const router = useRouter();
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const data = Object.fromEntries(new FormData(event.currentTarget).entries());
+    try {
+      const response = await fetch(`/api/auth/${mode}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json().catch(() => ({
+        error: "The service returned an unexpected response. Please try again shortly.",
+      }));
+      if (!response.ok) throw new Error(result.error || "Could not sign in");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="form-stack auth-form" onSubmit={submit}>
+      {mode === "register" ? <label>Full name<input name="name" required minLength={2} autoComplete="name" /></label> : null}
+      <label>Email<input name="email" type="email" required autoComplete="email" /></label>
+      <label>Password<input name="password" type="password" required minLength={12} maxLength={128} autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>
+      <button className="button" disabled={busy}>
+        {busy ? "Working…" : mode === "login" ? "Sign in" : "Create account"}
+      </button>
+      <p className="form-status" aria-live="polite">{message}</p>
+    </form>
+  );
+}
