@@ -1,0 +1,4 @@
+"use client";
+import {useState} from "react";
+const statuses=["NEW","CONTACTED","QUALIFIED","PROPOSAL","NEGOTIATION","WON","LOST"] as const;
+export function InquiryStatus({id,initial}:{id:string;initial:string}){const[value,setValue]=useState(initial);const[message,setMessage]=useState("");async function change(next:string){setMessage("Saving…");const response=await fetch(`/api/admin/inquiries/${id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status:next})});if(response.ok){setValue(next);setMessage("Saved")}else setMessage("Could not save")};return <label className="admin-status">Lead status <select value={value} onChange={e=>void change(e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select><span className="form-status" aria-live="polite">{message}</span></label>}
