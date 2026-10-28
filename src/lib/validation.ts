@@ -1,23 +1,15 @@
 import { z } from "zod";
-
 export const emailSchema = z.email().max(254).transform((value) => value.trim().toLowerCase());
-export const inquirySchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  email: emailSchema,
-  organization: z.string().trim().max(180).optional(),
-  phone: z.string().trim().max(40).optional(),
-  subject: z.string().trim().max(180).optional(),
-  message: z.string().trim().min(10).max(8000),
-});
-export const credentialsSchema = z.object({
-  name: z.string().trim().min(2).max(120).optional(),
-  email: emailSchema,
-  password: z.string().min(12).max(128),
-});
-
+export const inquirySchema = z.object({ name: z.string().trim().min(2).max(120), email: emailSchema, organization: z.string().trim().max(180).optional(), phone: z.string().trim().max(40).optional(), subject: z.string().trim().max(180).optional(), message: z.string().trim().min(10).max(8000) });
+export const institutionalInquirySchema = z.object({ institutionName: z.string().trim().min(2).max(180), institutionType: z.string().trim().min(2).max(80), contactName: z.string().trim().min(2).max(120), officialEmail: emailSchema, designation: z.string().trim().min(2).max(120), phone: z.string().trim().min(7).max(40), location: z.string().trim().min(2).max(180), areasOfInterest: z.array(z.string().trim().min(2).max(120)).min(1).max(12), approximateStudents: z.string().trim().max(8).optional(), preferredDates: z.string().trim().max(180).optional(), message: z.string().trim().min(10).max(8000), consent: z.literal(true) }).refine((data) => !data.approximateStudents || /^\d+$/.test(data.approximateStudents), { path: ["approximateStudents"], message: "Enter a whole number." });
+export const credentialsSchema = z.object({ name: z.string().trim().min(2).max(120).optional(), email: emailSchema, password: z.string().min(12).max(128) });
 export const registerSchema = z.object({ name: z.string().trim().min(2).max(120), email: emailSchema, password: z.string().min(12).max(128) });
 export const loginSchema = z.object({ email: emailSchema, password: z.string().min(1).max(128) });
 export const applicationSchema = z.object({ fullName: z.string().trim().min(2).max(120), email: emailSchema, phone: z.string().trim().max(40).optional() });
 export const curriculumPhaseSchema = z.object({ weeks: z.string().trim().min(1).max(80), title: z.string().trim().min(1).max(180), topics: z.array(z.string().trim().min(1).max(500)).min(1).max(12), optional: z.boolean().optional() });
-export const programSchema = z.object({ curriculum: z.array(curriculumPhaseSchema).max(12).optional(), kind: z.enum(["INTERNSHIP","COURSE","WORKSHOP","WEBINAR","BOOTCAMP","CERTIFICATION"]), title: z.string().trim().min(3).max(180), slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180), summary: z.string().trim().min(10).max(500), description: z.string().trim().min(20).max(20000), status: z.enum(["DRAFT","PUBLISHED","ARCHIVED"]).default("DRAFT"), category: z.string().trim().max(120).optional(), duration: z.string().trim().max(120).optional(), mode: z.string().trim().max(80).optional(), pricePaise: z.number().int().min(0).max(100000000).default(0) });
-
+export const internshipDetailsSchema = z.object({ eligibleBranches: z.array(z.string().trim().min(2).max(180)).min(1).max(20), targetLearnerLevel: z.string().trim().min(10).max(500), technologies: z.array(z.string().trim().min(1).max(120)).max(40), assignments: z.array(z.string().trim().min(5).max(500)).max(20), capstone: z.string().trim().min(10).max(1000), deliverables: z.array(z.string().trim().min(3).max(300)).max(20), faqs: z.array(z.object({ question: z.string().trim().min(5).max(300), answer: z.string().trim().min(10).max(1500) })).max(20) });
+export const programSchema = z.object({ curriculum: z.array(curriculumPhaseSchema).max(12).optional(), details: internshipDetailsSchema.optional(), kind: z.enum(["INTERNSHIP","COURSE","WORKSHOP","WEBINAR","BOOTCAMP","CERTIFICATION"]), title: z.string().trim().min(3).max(180), slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(180), summary: z.string().trim().min(10).max(500), description: z.string().trim().min(20).max(20000), status: z.enum(["DRAFT","PUBLISHED","ARCHIVED"]).default("DRAFT"), category: z.string().trim().max(120).optional(), duration: z.string().trim().max(120).optional(), mode: z.string().trim().max(80).optional(), pricePaise: z.number().int().min(0).max(100000000).default(0) });
+export const registrationSchema = z.object({ fullName: z.string().trim().min(2).max(120), email: emailSchema, phone: z.string().trim().max(40).optional() });
+export const applicationStatusSchema = z.object({ status: z.enum(["SUBMITTED","REVIEWING","SHORTLISTED","ACCEPTED","REJECTED","WITHDRAWN"]) });
+export const certificateIssueSchema = z.object({ userId: z.string().trim().optional(), recipientName: z.string().trim().min(2).max(120), programId: z.string().trim().optional(), programTitle: z.string().trim().min(2).max(180), completionConfirmed: z.literal(true) });
+export const certificateRevokeSchema = z.object({ reason: z.string().trim().min(10).max(1000) });

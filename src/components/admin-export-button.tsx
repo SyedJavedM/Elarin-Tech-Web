@@ -1,0 +1,1 @@
+"use client";export function AdminExportButton({type}:{type:"students"|"applications"|"institutions"}){return <button className="button" type="button" onClick={()=>{window.open(`/api/admin/export?type=${type}`,"_self")}}>Download CSV</button>}

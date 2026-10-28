@@ -80,3 +80,9 @@ The interface uses a warm paper canvas, forest green, near-black ink and restrai
 4. Create a learner account, then promote the initial administrator through a secured database operation (documented in README).
 5. Configure storage, email, payment/webhooks, rate limits and monitoring before enabling those production journeys.
 6. Review legal text and accessibility/content claims, then deploy the Next.js app.
+
+## Expanded administration and external dependencies
+
+Public event registrations have their own records, unique program/email constraints and optional account relation. Internship applications remain their own domain records. Certificates are issued only through an ADMIN-protected API after an administrator confirms completion; IDs are random, verification events store a one-way requester hash, and revocation records a reason. Admin CSV exports are restricted to whitelisted fields and capped to recent 5,000 rows.
+
+Still external/not implemented: durable form/auth rate limiting and bot controls, email notifications (Resend), private file upload/storage, payment checkout/webhooks, and PDF/QR certificate rendering. Do not represent these as active services. PostgreSQL production connectivity and persistence have not been directly probed in this checkout because production credentials are not available here; Vercel deployment/migration logs and a safe test database are needed to verify them. No production form submissions were used as tests.

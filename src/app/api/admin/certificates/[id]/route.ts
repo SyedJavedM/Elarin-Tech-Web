@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth";
+import { db } from "@/lib/prisma";
+import { certificateRevokeSchema } from "@/lib/validation";
+export async function PATCH(request:Request,context:{params:Promise<{id:string}>}){const admin=await requireRole("ADMIN");if(!admin)return NextResponse.json({error:"Unauthorized"},{status:401});const{id}=await context.params;const parsed=certificateRevokeSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Provide a revocation reason of at least 10 characters."},{status:400});try{const certificate=await db.certificate.update({where:{id},data:{status:"REVOKED",revokedAt:new Date(),revocationReason:parsed.data.reason}});await db.adminAuditLog.create({data:{adminId:admin.id,action:"CERTIFICATE_REVOKED",entityType:"Certificate",entityId:id,metadata:{reason:parsed.data.reason}}});return NextResponse.json({ok:true,status:certificate.status});}catch{return NextResponse.json({error:"Certificate could not be updated."},{status:404});}}

@@ -83,6 +83,8 @@ model User {
   certificates    Certificate[]
   notifications   Notification[]
   payments        Payment[]
+  workshopRegistrations WorkshopRegistration[]
+  webinarRegistrations WebinarRegistration[]
 }
 
 model Session {
@@ -115,6 +117,7 @@ model Program {
   summary               String
   description           String                  @db.Text
   curriculum            Json?
+  details               Json?
   category              String?
   level                 String?
   duration              String?
@@ -212,25 +215,31 @@ model CourseProgress {
 model WorkshopRegistration {
   id        String             @id @default(cuid())
   programId String
+  userId    String?
   fullName  String
   email     String
   status    RegistrationStatus @default(REGISTERED)
   createdAt DateTime           @default(now())
   program   Program            @relation(fields: [programId], references: [id], onDelete: Cascade)
+  user      User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([programId, email])
+  @@index([userId, createdAt])
 }
 
 model WebinarRegistration {
   id        String             @id @default(cuid())
   programId String
+  userId    String?
   fullName  String
   email     String
   status    RegistrationStatus @default(REGISTERED)
   createdAt DateTime           @default(now())
   program   Program            @relation(fields: [programId], references: [id], onDelete: Cascade)
+  user      User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([programId, email])
+  @@index([userId, createdAt])
 }
 
 model Certificate {
@@ -243,6 +252,7 @@ model Certificate {
   status        CertificateStatus         @default(ISSUED)
   issuedAt      DateTime                  @default(now())
   revokedAt     DateTime?
+  revocationReason String?
   user          User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
   program       Program?                  @relation(fields: [programId], references: [id], onDelete: SetNull)
   verifications CertificateVerification[]

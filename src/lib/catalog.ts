@@ -1,6 +1,7 @@
 import { ProgramKind, ProgramStatus } from "@/generated/prisma/client";
 import { db } from "@/lib/prisma";
 import { internships } from "@/lib/internships";
+import { internshipDetails } from "@/lib/internship-details";
 
 const programKinds: Record<string, ProgramKind> = {
   internships: ProgramKind.INTERNSHIP,
@@ -23,6 +24,7 @@ export async function getPrograms(collection: string) {
     return internships.map((program) => ({
       ...bySlug.get(program.slug),
       ...program,
+      details: internshipDetails[program.slug],
       id: bySlug.get(program.slug)?.id ?? program.slug,
       kind,
       status: ProgramStatus.PUBLISHED,
@@ -41,7 +43,7 @@ export async function getProgram(collection: string, slug: string) {
     const canonical = internships.find((program) => program.slug === slug);
     if (!canonical) return null;
     const stored = await db.program.findFirst({ where: { kind, slug, status: ProgramStatus.PUBLISHED, publishedAt: { lte: new Date() } } }).catch(() => null);
-    return { ...stored, ...canonical, curriculum: canonical.curriculum, id: stored?.id ?? canonical.slug, kind, status: ProgramStatus.PUBLISHED };
+    return { ...stored, ...canonical, curriculum: canonical.curriculum, details: internshipDetails[canonical.slug], id: stored?.id ?? canonical.slug, kind, status: ProgramStatus.PUBLISHED };
   }
   return db.program.findFirst({ where: { kind, slug, status: ProgramStatus.PUBLISHED, publishedAt: { lte: new Date() } } }).catch(() => null);
 }

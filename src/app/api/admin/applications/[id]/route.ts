@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth";
+import { db } from "@/lib/prisma";
+import { applicationStatusSchema } from "@/lib/validation";
+export async function PATCH(request:Request, context:{params:Promise<{id:string}>}) { const admin=await requireRole("ADMIN"); if(!admin) return NextResponse.json({error:"Unauthorized"},{status:401}); const {id}=await context.params; const parsed=applicationStatusSchema.safeParse(await request.json().catch(()=>null)); if(!parsed.success) return NextResponse.json({error:"Invalid application status."},{status:400}); try { const application=await db.internshipApplication.update({where:{id},data:{status:parsed.data.status}}); await db.adminAuditLog.create({data:{adminId:admin.id,action:"APPLICATION_STATUS_UPDATED",entityType:"InternshipApplication",entityId:id,metadata:{status:parsed.data.status}}}); return NextResponse.json({ok:true,status:application.status}); } catch { return NextResponse.json({error:"Application could not be updated."},{status:404}); } }
