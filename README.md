@@ -80,3 +80,29 @@ The admin dashboard exposes `/admin/students`, `/admin/applications`, `/admin/wo
 ### Safe schema deployment
 
 The migrations `20261028010000_add_program_curriculum`, `20261028020000_add_program_details_and_certificate_revocation`, and `20261028030000_link_event_registrations_to_accounts` add nullable columns/foreign keys/indexes and do not delete existing records. Review Vercel's configured `DATABASE_URL`/`DIRECT_URL` provider and backup status, then deploy with the repo's migration command before serving code that depends on the new columns. The repository's Vercel build command currently deploys migrations and seeds internship content; confirm its production environment is correctly scoped before deployment.
+
+## Database access and operator guide
+
+### Which database the site uses
+
+ELARIN TECH uses **PostgreSQL**, accessed through **Prisma ORM**. MongoDB is not configured. The Prisma schema is in `prisma/schema.prisma`; schema changes are tracked under `prisma/migrations/`. Vercel runs the web application, while the PostgreSQL database is hosted by the database provider configured in the Vercel environment.
+
+### Find the production database provider
+
+1. Open the ELARIN TECH project in Vercel and select **Settings → Environment Variables**.
+2. Check whether `DATABASE_URL` and `DIRECT_URL` are present in the Production environment. Vercel stores the connection strings as secrets; keep them private and do not paste them into chat or commit them to Git.
+3. Use the database provider integration or dashboard associated with those URLs to open its SQL console, inspect backups, and manage database access. Vercel does not expose a database console just because it hosts the site.
+4. If those variables are missing, the production app has no configured PostgreSQL connection. Create a managed PostgreSQL database first, then add its pooled runtime URL as `DATABASE_URL` and its direct connection URL as `DIRECT_URL` (if the provider supports separate pooled and direct URLs). Keep both scoped to the intended Vercel project and environment.
+
+### View website records
+
+Sign in using an account that an operator has promoted to the `ADMIN` role. The role-protected pages include `/admin/students`, `/admin/applications`, `/admin/workshops`, `/admin/webinars`, `/admin/enrollments`, `/admin/certificates`, `/admin/institutions`, and `/admin/inquiries`. The admin pages use the app's server-side authorization; a public learner account does not have database access. Available controlled exports are documented above in the API overview / operations notes.
+
+### Local development and safe schema changes
+
+1. Copy `.env.example` to `.env` and set local or development-only PostgreSQL URLs. Do not use production credentials for local testing.
+2. Run `npm run db:generate`, then `npm run db:migrate` to create a development migration, or `npm run db:deploy` to apply already-reviewed migrations in a deployment environment.
+3. Review the migration SQL under `prisma/migrations/` before deploying. The Vercel build is configured to run `prisma migrate deploy` and the seed command; ensure the Production database variables point to the correct database before deploying schema changes.
+4. Use a provider backup/snapshot before high-impact production changes. Never edit production data manually without a verified backup and a specific operational need.
+
+The repository does not include production database credentials, and these instructions do not connect to or change the production database.
