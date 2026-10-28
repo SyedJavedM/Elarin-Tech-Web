@@ -68,23 +68,25 @@ enum RegistrationStatus {
 }
 
 model User {
-  id              String                  @id @default(cuid())
-  name            String
-  email           String                  @unique
-  passwordHash    String?
-  emailVerifiedAt DateTime?
-  role            Role                    @default(STUDENT)
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  sessions        Session[]
-  studentProfile  StudentProfile?
-  applications    InternshipApplication[]
-  enrollments     CourseEnrollment[]
-  certificates    Certificate[]
-  notifications   Notification[]
-  payments        Payment[]
-  workshopRegistrations WorkshopRegistration[]
-  webinarRegistrations WebinarRegistration[]
+  id                      String                  @id @default(cuid())
+  name                    String
+  email                   String                  @unique
+  passwordHash            String?
+  emailVerifiedAt         DateTime?
+  role                    Role                    @default(STUDENT)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  sessions                Session[]
+  studentProfile          StudentProfile?
+  applications            InternshipApplication[]
+  enrollments             CourseEnrollment[]
+  certificates            Certificate[]
+  completionRecords       CompletionRecord[]
+  issuedCompletionRecords CompletionRecord[]      @relation("CompletionRecordedBy")
+  notifications           Notification[]
+  payments                Payment[]
+  workshopRegistrations   WorkshopRegistration[]
+  webinarRegistrations    WebinarRegistration[]
 }
 
 model Session {
@@ -110,6 +112,7 @@ model StudentProfile {
 
 model Program {
   id                    String                  @id @default(cuid())
+  referenceCode         String?                 @unique
   kind                  ProgramKind
   status                ProgramStatus           @default(DRAFT)
   title                 String
@@ -138,24 +141,26 @@ model Program {
   workshopRegistrations WorkshopRegistration[]
   webinarRegistrations  WebinarRegistration[]
   certificates          Certificate[]
+  completionRecords     CompletionRecord[]
   payments              Payment[]
 
   @@index([kind, status, publishedAt])
 }
 
 model InternshipApplication {
-  id        String   @id @default(cuid())
-  userId    String?
-  programId String
-  fullName  String
-  email     String
-  phone     String?
-  resumeKey String?
-  status    String   @default("SUBMITTED")
-  answers   Json?
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  program   Program  @relation(fields: [programId], references: [id], onDelete: Restrict)
+  id            String   @id @default(cuid())
+  referenceCode String?  @unique
+  userId        String?
+  programId     String
+  fullName      String
+  email         String
+  phone         String?
+  resumeKey     String?
+  status        String   @default("SUBMITTED")
+  answers       Json?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  program       Program  @relation(fields: [programId], references: [id], onDelete: Restrict)
 
   @@index([programId, createdAt])
   @@index([email])
@@ -186,16 +191,18 @@ model CourseLesson {
 }
 
 model CourseEnrollment {
-  id            String           @id @default(cuid())
-  userId        String
-  programId     String
-  status        String           @default("ACTIVE")
-  progress      Int              @default(0)
-  enrolledAt    DateTime         @default(now())
-  completedAt   DateTime?
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  program       Program          @relation(fields: [programId], references: [id], onDelete: Restrict)
-  progressItems CourseProgress[]
+  id               String            @id @default(cuid())
+  referenceCode    String?           @unique
+  userId           String
+  programId        String
+  status           String            @default("ACTIVE")
+  progress         Int               @default(0)
+  enrolledAt       DateTime          @default(now())
+  completedAt      DateTime?
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program          Program           @relation(fields: [programId], references: [id], onDelete: Restrict)
+  progressItems    CourseProgress[]
+  completionRecord CompletionRecord?
 
   @@unique([userId, programId])
   @@index([userId, status])
@@ -243,19 +250,45 @@ model WebinarRegistration {
 }
 
 model Certificate {
-  id            String                    @id @default(cuid())
-  certificateId String                    @unique
-  userId        String?
-  programId     String?
-  recipientName String
-  programTitle  String
-  status        CertificateStatus         @default(ISSUED)
-  issuedAt      DateTime                  @default(now())
-  revokedAt     DateTime?
-  revocationReason String?
-  user          User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  program       Program?                  @relation(fields: [programId], references: [id], onDelete: SetNull)
-  verifications CertificateVerification[]
+  id                 String                    @id @default(cuid())
+  certificateId      String                    @unique
+  userId             String?
+  programId          String?
+  recipientName      String
+  programTitle       String
+  status             CertificateStatus         @default(ISSUED)
+  issuedAt           DateTime                  @default(now())
+  revokedAt          DateTime?
+  revocationReason   String?
+  completionRecordId String?                   @unique
+  user               User?                     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  program            Program?                  @relation(fields: [programId], references: [id], onDelete: SetNull)
+  verifications      CertificateVerification[]
+  completionRecord   CompletionRecord?         @relation(fields: [completionRecordId], references: [id], onDelete: Restrict)
+}
+
+model CompletionRecord {
+  id                 String            @id @default(cuid())
+  userId             String
+  programId          String
+  enrollmentId       String?           @unique
+  recordedByAdminId  String
+  completedAt        DateTime          @default(now())
+  completionCriteria String            @db.Text
+  createdAt          DateTime          @default(now())
+  certificate        Certificate?
+  enrollment         CourseEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  program            Program           @relation(fields: [programId], references: [id], onDelete: Restrict)
+  recordedByAdmin    User              @relation("CompletionRecordedBy", fields: [recordedByAdminId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, programId])
+  @@index([recordedByAdminId, createdAt])
+}
+
+model ReferenceCounter {
+  key   String @id
+  value Int    @default(0)
 }
 
 model CertificateVerification {

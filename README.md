@@ -106,3 +106,13 @@ Sign in using an account that an operator has promoted to the `ADMIN` role. The 
 4. Use a provider backup/snapshot before high-impact production changes. Never edit production data manually without a verified backup and a specific operational need.
 
 The repository does not include production database credentials, and these instructions do not connect to or change the production database.
+
+## Readable references and certificate operations
+
+Program, internship application, and course enrolment records retain their existing internal primary keys. The additive migration backfills unique `referenceCode` values and adds a unique index; the reference columns remain nullable during rollout so the currently deployed application can continue writing while Vercel builds the new version. All updated creation paths assign a code. After deployment has fully switched to the new version, an operator may add a follow-up migration to enforce `NOT NULL` after confirming no rollout-time legacy inserts remain.
+
+New application and enrolment references use `ELR-APP-YYYY-NNNN` and `ELR-ENR-YYYY-NNNN`; certificate references use `ELR-CERT-YYYY-NNNN`. The year is UTC. PostgreSQL `ReferenceCounter` rows are incremented atomically inside the same transaction as each record write. Program references use stable kind/slug tokens and a per-token counter. Existing certificate IDs are retained so issued documents remain verifiable.
+
+Certificate issuance is admin-only. It records the administrator's completion evidence, links a completion record to the learner and program, creates the certificate, and writes the audit event transactionally. Internship certificates require an accepted application; course/certification certificates require an enrolment and record its completion; workshop/webinar certificates require attended registration. A separate bootcamp completion workflow is not currently configured. Revocation and its audit event are also transactional. Public verification returns an explicit minimal DTO and does not reveal internal IDs or contact details.
+
+Vercel's configured build command runs `prisma migrate deploy` and the seed script before the Next.js build. Review migration and seed changes before publishing. Do not run `prisma migrate reset` or connect this change to a production database from a local workstation.

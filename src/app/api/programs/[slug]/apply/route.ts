@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 import { currentUser } from "@/lib/auth";
 import { applicationSchema } from "@/lib/validation";
+import { nextRecordReference } from "@/lib/reference-codes";
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
   const parsed = applicationSchema.safeParse(await request.json().catch(() => null));
@@ -13,8 +14,8 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     if (duplicate) return NextResponse.json({ error: "An application for this internship already exists for that email." }, { status: 409 });
     const sessionUser = await currentUser().catch(() => null);
     const matchingUser = sessionUser?.email === parsed.data.email ? sessionUser : await db.user.findUnique({ where: { email: parsed.data.email } });
-    const application = await db.internshipApplication.create({ data: { ...parsed.data, userId: matchingUser?.id ?? null, programId: program.id } });
-    return NextResponse.json({ ok: true, id: application.id }, { status: 201 });
+    const application = await db.$transaction(async (tx) => tx.internshipApplication.create({ data: { ...parsed.data, userId: matchingUser?.id ?? null, programId: program.id, referenceCode: await nextRecordReference(tx, "APP") } }));
+    return NextResponse.json({ ok: true, referenceCode: application.referenceCode }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Your application could not be saved right now. Please try again later." }, { status: 503 });
   }
